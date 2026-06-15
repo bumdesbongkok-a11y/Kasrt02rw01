@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kas RT Firebase</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6f9;padding:15px}
+.card{background:#fff;padding:15px;border-radius:10px;max-width:900px;margin:auto auto 15px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+input,select,button{width:100%;padding:10px;margin:5px 0}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ddd;padding:6px;text-align:center}
+th{background:#2196F3;color:#fff}
+.saldo{font-size:28px;font-weight:bold;color:green;text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Kas RT02RW01</h2>
+<div class="saldo" id="saldo">Rp 0</div>
+<input type="date" id="tanggal" onchange="updateHari()">
+<input type="text" id="hari" placeholder="Hari" readonly>
+<select id="jenis">
+<option value="masuk">Pemasukan</option>
+<option value="keluar">Pengeluaran</option>
+</select>
+<input type="text" id="keterangan" placeholder="Keterangan">
+<input type="number" id="jumlah" placeholder="Jumlah">
+<button onclick="simpanData()">Simpan</button>
+<input type="text" id="cari" placeholder="Cari..." onkeyup="filterTabel()">
+</div>
+
+<div class="card">
+<table>
+<thead><tr><th>Tanggal</th><th>Hari</th><th>Ket</th><th>Masuk</th><th>Keluar</th><th>Aksi</th></tr></thead>
+<tbody id="tabelData"></tbody>
+</table>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+ apiKey:"AIzaSyAXeuLMydRBSi8UplsTTNg4nQpsdFvt27k",
+ authDomain:"kas-rt-6fe58.firebaseapp.com",
+ projectId:"kas-rt-6fe58",
+ storageBucket:"kas-rt-6fe58.firebasestorage.app",
+ messagingSenderId:"157572581121",
+ appId:"1:157572581121:web:75cdc549e255ad7d5ffd00"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+let editId=null;
+
+window.updateHari=function(){
+ const v=document.getElementById("tanggal").value;
+ if(!v) return;
+ const h=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+ document.getElementById("hari").value=h[new Date(v).getDay()];
+}
+
+function setToday(){
+ const d=new Date();
+ document.getElementById("tanggal").value=d.toISOString().split("T")[0];
+ updateHari();
+}
+setToday();
+
+window.simpanData=async function(){
+ const data={
+  tanggal:tanggal.value,
+  hari:hari.value,
+  jenis:jenis.value,
+  keterangan:keterangan.value,
+  jumlah:Number(jumlah.value)
+ };
+ if(!data.keterangan||!data.jumlah){alert("Lengkapi data");return;}
+ if(editId){
+   await updateDoc(doc(db,"kasrt",editId),data);
+   editId=null;
+ } else {
+   await addDoc(collection(db,"kasrt"),data);
+ }
+ keterangan.value=""; jumlah.value="";
+ tampilData();
+}
+
+window.tampilData=async function(){
+ let saldo=0;
+ tabelData.innerHTML="";
+ const s=await getDocs(collection(db,"kasrt"));
+ s.forEach(r=>{
+   const d=r.data();
+   saldo += d.jenis==="masuk"?d.jumlah:-d.jumlah;
+   tabelData.innerHTML += `<tr>
+   <td>${d.tanggal}</td><td>${d.hari}</td><td>${d.keterangan}</td>
+   <td>${d.jenis==="masuk"?d.jumlah.toLocaleString("id-ID"):"-"}</td>
+   <td>${d.jenis==="keluar"?d.jumlah.toLocaleString("id-ID"):"-"}</td>
+   <td>
+   <button onclick="editData('${r.id}','${d.tanggal}','${d.hari}','${d.jenis}','${d.keterangan}',${d.jumlah})">Edit</button>
+   <button onclick="hapusData('${r.id}')">Hapus</button>
+   </td></tr>`;
+ });
+ saldo.innerHTML="Rp "+saldo.toLocaleString("id-ID");
+}
+
+window.editData=function(id,t,h,j,k,jm){
+ editId=id;
+ tanggal.value=t; hari.value=h; jenis.value=j; keterangan.value=k; jumlah.value=jm;
+}
+
+window.hapusData=async function(id){
+ if(confirm("Hapus data?")){
+   await deleteDoc(doc(db,"kasrt",id));
+   tampilData();
+ }
+}
+
+window.filterTabel=function(){
+ let f=cari.value.toLowerCase();
+ document.querySelectorAll("#tabelData tr").forEach(r=>{
+   r.style.display=r.innerText.toLowerCase().includes(f)?"":"none";
+ });
+}
+
+tampilData();
+</script>
+</body>
+</html>
