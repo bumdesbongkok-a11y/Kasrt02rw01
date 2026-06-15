@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kas RT02RW01</title>
+<title>Kas RT02 RW01</title>
 
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -19,7 +20,7 @@ padding:15px;
 }
 
 .card{
-background:#fff;
+background:white;
 padding:15px;
 border-radius:12px;
 box-shadow:0 2px 10px rgba(0,0,0,.1);
@@ -34,12 +35,14 @@ margin-bottom:10px;
 .saldo{
 font-size:30px;
 font-weight:bold;
-text-align:center;
 color:green;
+text-align:center;
 margin:10px 0;
 }
 
-input,select,button{
+input,
+select,
+button{
 width:100%;
 padding:10px;
 margin:5px 0;
@@ -54,22 +57,18 @@ border:none;
 cursor:pointer;
 }
 
-button:hover{
-opacity:.9;
-}
-
 .btn-wa{
 background:#25D366;
 }
 
-.btn-hapus{
-background:#f44336;
-padding:6px;
-}
-
 .btn-edit{
 background:#ff9800;
-padding:6px;
+padding:5px;
+}
+
+.btn-hapus{
+background:#f44336;
+padding:5px;
 }
 
 table{
@@ -85,8 +84,8 @@ padding:8px;
 }
 
 td{
-padding:6px;
 border:1px solid #ddd;
+padding:6px;
 text-align:center;
 }
 
@@ -94,13 +93,9 @@ text-align:center;
 overflow-x:auto;
 }
 
-@media(max-width:600px){
-table{
-font-size:11px;
-}
-}
 </style>
 </head>
+
 <body>
 
 <div class="card">
@@ -120,19 +115,28 @@ Rp 0
 <option value="keluar">Pengeluaran</option>
 </select>
 
-<input type="text" id="keterangan" placeholder="Keterangan">
+<input
+type="text"
+id="keterangan"
+placeholder="Keterangan">
 
-<input type="number" id="jumlah" placeholder="Jumlah">
+<input
+type="number"
+id="jumlah"
+placeholder="Jumlah">
 
 <button onclick="simpanData()">
 💾 Simpan Data
 </button>
 
-<button class="btn-wa" onclick="shareWA()">
+<button
+class="btn-wa"
+onclick="shareWA()">
 📤 Share WhatsApp
 </button>
 
-<input type="text"
+<input
+type="text"
 id="cari"
 placeholder="Cari data..."
 onkeyup="filterTabel()">
@@ -154,8 +158,7 @@ onkeyup="filterTabel()">
 </tr>
 </thead>
 
-<tbody id="tabelData">
-</tbody>
+<tbody id="tabelData"></tbody>
 
 </table>
 
@@ -176,11 +179,12 @@ addDoc,
 getDocs,
 deleteDoc,
 doc,
-updateDoc
+updateDoc,
+query,
+orderBy
 }
 from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
 const firebaseConfig = {
 
 apiKey:"AIzaSyAXeuLMydRBSi8UplsTTNg4nQpsdFvt27k",
@@ -197,11 +201,14 @@ appId:"1:157572581121:web:75cdc549e255ad7d5ffd00"
 
 };
 
-const app = initializeApp(firebaseConfig);
+const app =
+initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
+const db =
+getFirestore(app);
 
-let editId = null;const tanggal =
+let editId = null;
+const tanggal =
 document.getElementById("tanggal");
 
 const hari =
@@ -216,13 +223,9 @@ document.getElementById("keterangan");
 const jumlah =
 document.getElementById("jumlah");
 
-window.updateHari = function(){
+window.updateHari=function(){
 
-const value = tanggal.value;
-
-if(!value) return;
-
-const namaHari = [
+const namaHari=[
 "Minggu",
 "Senin",
 "Selasa",
@@ -232,9 +235,11 @@ const namaHari = [
 "Sabtu"
 ];
 
-hari.value =
+hari.value=
 namaHari[
-new Date(value).getDay()
+new Date(
+tanggal.value
+).getDay()
 ];
 
 };
@@ -244,32 +249,30 @@ tanggal.addEventListener(
 updateHari
 );
 
-function setToday(){
-
-const d = new Date();
+const sekarang =
+new Date();
 
 tanggal.value =
-d.toISOString().split("T")[0];
+sekarang
+.toISOString()
+.split("T")[0];
 
 updateHari();
 
-}
+window.simpanData =
+async function(){
 
-setToday();
+const data={
 
-window.simpanData = async function(){
+tanggal:tanggal.value,
 
-const data = {
+hari:hari.value,
 
-tanggal: tanggal.value,
+jenis:jenis.value,
 
-hari: hari.value,
+keterangan:keterangan.value,
 
-jenis: jenis.value,
-
-keterangan: keterangan.value,
-
-jumlah: Number(jumlah.value)
+jumlah:Number(jumlah.value)
 
 };
 
@@ -284,22 +287,25 @@ return;
 if(editId){
 
 await updateDoc(
-doc(db,"kasrt",editId),
+doc(
+db,
+"kasrt",
+editId
+),
 data
 );
 
 editId=null;
 
-alert("Data berhasil diubah");
-
 }else{
 
 await addDoc(
-collection(db,"kasrt"),
+collection(
+db,
+"kasrt"
+),
 data
 );
-
-alert("Data berhasil disimpan");
 
 }
 
@@ -313,24 +319,36 @@ tampilData();
 window.tampilData =
 async function(){
 
-let saldoKas = 0;
+let saldoKas=0;
 
 tabelData.innerHTML="";
 
-const snapshot =
-await getDocs(
-collection(db,"kasrt")
+const q =
+query(
+collection(
+db,
+"kasrt"
+),
+orderBy(
+"tanggal",
+"desc"
+)
 );
 
-snapshot.forEach((item)=>{
+const snapshot =
+await getDocs(q);
 
-const d = item.data();
+snapshot.forEach(item=>{
 
-if(d.jenis==="masuk"){
-saldoKas += d.jumlah;
-}else{
-saldoKas -= d.jumlah;
-}
+const d =
+item.data();
+
+saldoKas +=
+d.jenis==="masuk"
+?
+d.jumlah
+:
+-d.jumlah;
 
 tabelData.innerHTML += `
 <tr>
@@ -344,7 +362,8 @@ tabelData.innerHTML += `
 <td>
 ${d.jenis==="masuk"
 ?
-"Rp "+d.jumlah.toLocaleString("id-ID")
+"Rp "+
+d.jumlah.toLocaleString("id-ID")
 :
 "-"}
 </td>
@@ -352,7 +371,8 @@ ${d.jenis==="masuk"
 <td>
 ${d.jenis==="keluar"
 ?
-"Rp "+d.jumlah.toLocaleString("id-ID")
+"Rp "+
+d.jumlah.toLocaleString("id-ID")
 :
 "-"}
 </td>
@@ -384,15 +404,15 @@ Hapus
 `;
 
 });
-document.getElementById("saldo")
-.innerHTML =
-"Rp " +
+
+document
+.getElementById("saldo")
+.innerHTML=
+"Rp "+
 saldoKas.toLocaleString("id-ID");
 
 };
-
-window.editData =
-function(
+window.editData=function(
 id,
 tgl,
 hr,
@@ -404,13 +424,9 @@ jml
 editId=id;
 
 tanggal.value=tgl;
-
 hari.value=hr;
-
 jenis.value=jns;
-
 keterangan.value=ket;
-
 jumlah.value=jml;
 
 window.scrollTo({
@@ -420,13 +436,21 @@ behavior:"smooth"
 
 };
 
-window.hapusData =
+window.hapusData=
 async function(id){
 
-if(confirm("Hapus data ini?")){
+if(
+confirm(
+"Hapus data?"
+)
+){
 
 await deleteDoc(
-doc(db,"kasrt",id)
+doc(
+db,
+"kasrt",
+id
+)
 );
 
 tampilData();
@@ -435,23 +459,22 @@ tampilData();
 
 };
 
-window.filterTabel =
+window.filterTabel=
 function(){
 
-const filter =
+let filter=
 document
 .getElementById("cari")
 .value
 .toLowerCase();
 
-const rows =
-document.querySelectorAll(
+document
+.querySelectorAll(
 "#tabelData tr"
-);
+)
+.forEach(row=>{
 
-rows.forEach(row=>{
-
-row.style.display =
+row.style.display=
 row.innerText
 .toLowerCase()
 .includes(filter)
@@ -464,24 +487,35 @@ row.innerText
 
 };
 
-window.shareWA =
+window.shareWA=
 async function(){
 
-let pesan =
+let pesan=
 "📒 LAPORAN KAS RT02/RW01\n\n";
 
-let saldoTotal = 0;
+let saldo=0;
 
-const snapshot =
-await getDocs(
-collection(db,"kasrt")
+const q=
+query(
+collection(
+db,
+"kasrt"
+),
+orderBy(
+"tanggal",
+"desc"
+)
 );
 
-snapshot.forEach((item)=>{
+const snapshot=
+await getDocs(q);
 
-const d = item.data();
+snapshot.forEach(item=>{
 
-saldoTotal +=
+const d=
+item.data();
+
+saldo +=
 d.jenis==="masuk"
 ?
 d.jumlah
@@ -499,7 +533,8 @@ pesan +=
 ?
 "➕ Masuk"
 :
-"➖ Keluar"} : Rp ${d.jumlah.toLocaleString("id-ID")}\n\n`;
+"➖ Keluar"
+} : Rp ${d.jumlah.toLocaleString("id-ID")}\n\n`;
 
 });
 
@@ -507,10 +542,10 @@ pesan +=
 "====================\n";
 
 pesan +=
-`💰 SALDO KAS : Rp ${saldoTotal.toLocaleString("id-ID")}`;
+`💰 SALDO KAS : Rp ${saldo.toLocaleString("id-ID")}`;
 
 window.open(
-"https://wa.me/?text=" +
+"https://wa.me/?text="+
 encodeURIComponent(pesan),
 "_blank"
 );
