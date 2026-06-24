@@ -135,11 +135,71 @@ onclick="shareWA()">
 📤 Share WhatsApp
 </button>
 
+<label>Dari Tanggal</label>
+<input
+type="date"
+id="tglAwal"
+onchange="filterTabel()">
+
+<label>Sampai Tanggal</label>
+<input
+type="date"
+id="tglAkhir"
+onchange="filterTabel()">
+
+<button onclick="resetFilter()">
+🔄 Reset Filter
+</button>
+
 <input
 type="text"
 id="cari"
 placeholder="Cari data..."
 onkeyup="filterTabel()">
+
+<div style="
+display:flex;
+gap:8px;
+margin-top:10px;
+">
+
+<div style="
+flex:1;
+background:#4CAF50;
+color:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+<div>➕ Masuk</div>
+<div id="totalMasukCari">Rp 0</div>
+</div>
+
+<div style="
+flex:1;
+background:#F44336;
+color:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+<div>➖ Keluar</div>
+<div id="totalKeluarCari">Rp 0</div>
+</div>
+
+<div style="
+flex:1;
+background:#2196F3;
+color:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+">
+<div>💰 Saldo</div>
+<div id="saldoCari">Rp 0</div>
+</div>
+
+</div>
 
 </div>
 
@@ -185,18 +245,14 @@ orderBy
 }
 from
 "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
 const firebaseConfig = {
 
 apiKey:"AIzaSyAXeuLMydRBSi8UplsTTNg4nQpsdFvt27k",
-
 authDomain:"kas-rt-6fe58.firebaseapp.com",
-
 projectId:"kas-rt-6fe58",
-
 storageBucket:"kas-rt-6fe58.firebasestorage.app",
-
 messagingSenderId:"157572581121",
-
 appId:"1:157572581121:web:75cdc549e255ad7d5ffd00"
 
 };
@@ -208,6 +264,7 @@ const db =
 getFirestore(app);
 
 let editId = null;
+
 const tanggal =
 document.getElementById("tanggal");
 
@@ -263,17 +320,11 @@ window.simpanData =
 async function(){
 
 const data={
-
 tanggal:tanggal.value,
-
 hari:hari.value,
-
 jenis:jenis.value,
-
 keterangan:keterangan.value,
-
 jumlah:Number(jumlah.value)
-
 };
 
 if(
@@ -315,7 +366,6 @@ jumlah.value="";
 tampilData();
 
 };
-
 window.tampilData =
 async function(){
 
@@ -411,7 +461,10 @@ document
 "Rp "+
 saldoKas.toLocaleString("id-ID");
 
+filterTabel();
+
 };
+
 window.editData=function(
 id,
 tgl,
@@ -459,31 +512,114 @@ tampilData();
 
 };
 
-window.filterTabel=
+window.filterTabel =
 function(){
 
-let filter=
-document
-.getElementById("cari")
+let filter =
+document.getElementById("cari")
 .value
 .toLowerCase();
 
+let tglAwal =
+document.getElementById("tglAwal")
+.value;
+
+let tglAkhir =
+document.getElementById("tglAkhir")
+.value;
+
+let totalMasuk = 0;
+let totalKeluar = 0;
+
 document
-.querySelectorAll(
-"#tabelData tr"
-)
+.querySelectorAll("#tabelData tr")
 .forEach(row=>{
 
-row.style.display=
+let td =
+row.querySelectorAll("td");
+
+let tanggal =
+td[0].innerText;
+
+let cocokText =
 row.innerText
 .toLowerCase()
-.includes(filter)
-?
-""
-:
-"none";
+.includes(filter);
+
+let cocokTanggal = true;
+
+if(tglAwal){
+cocokTanggal =
+tanggal >= tglAwal;
+}
+
+if(tglAkhir){
+cocokTanggal =
+cocokTanggal &&
+tanggal <= tglAkhir;
+}
+
+let cocok =
+cocokText &&
+cocokTanggal;
+
+row.style.display =
+cocok ? "" : "none";
+
+if(cocok){
+
+let masukText =
+td[3].innerText
+.replace("Rp","")
+.replace(/\./g,"")
+.replace(/,/g,"")
+.trim();
+
+let keluarText =
+td[4].innerText
+.replace("Rp","")
+.replace(/\./g,"")
+.replace(/,/g,"")
+.trim();
+
+let masuk =
+(masukText && masukText !== "-")
+? Number(masukText)
+: 0;
+
+let keluar =
+(keluarText && keluarText !== "-")
+? Number(keluarText)
+: 0;
+
+totalMasuk += masuk;
+totalKeluar += keluar;
+
+}
 
 });
+
+let saldo =
+totalMasuk -
+totalKeluar;
+
+document.getElementById(
+"totalMasukCari"
+).innerHTML =
+"Rp " +
+totalMasuk.toLocaleString("id-ID");
+
+document.getElementById(
+"totalKeluarCari"
+).innerHTML =
+"Rp " +
+totalKeluar.toLocaleString("id-ID");
+
+document.getElementById(
+"saldoCari"
+).innerHTML =
+"Rp " +
+saldo.toLocaleString("id-ID");
 
 };
 
