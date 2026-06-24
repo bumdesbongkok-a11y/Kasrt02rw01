@@ -151,6 +151,12 @@ onchange="filterTabel()">
 🔄 Reset Filter
 </button>
 
+<select id="filterJenis" onchange="filterTabel()">
+<option value="">Semua Transaksi</option>
+<option value="masuk">Pemasukan Saja</option>
+<option value="keluar">Pengeluaran Saja</option>
+</select>
+
 <input
 type="text"
 id="cari"
@@ -520,6 +526,10 @@ document.getElementById("cari")
 .value
 .toLowerCase();
 
+let filterJenis =
+document.getElementById("filterJenis")
+.value;
+
 let tglAwal =
 document.getElementById("tglAwal")
 .value;
@@ -537,6 +547,13 @@ document
 
 let td =
 row.querySelectorAll("td");
+
+let jenisData =
+td[3].innerText !== "-"
+?
+"masuk"
+:
+"keluar";
 
 let tanggal =
 td[0].innerText;
@@ -559,9 +576,14 @@ cocokTanggal &&
 tanggal <= tglAkhir;
 }
 
+let cocokJenis =
+!filterJenis ||
+jenisData === filterJenis;
+
 let cocok =
 cocokText &&
-cocokTanggal;
+cocokTanggal &&
+cocokJenis;
 
 row.style.display =
 cocok ? "" : "none";
